@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Smart Traffic System</title>
+  <link rel="stylesheet" href="/my_traffic/style.css">
+</head>
+
+<body>
+
+<h1>🚦 Smart Traffic Control</h1>
+
+<!-- INPUT SCREEN -->
+<div id="inputScreen" class="card">
+  <h2>Enter Vehicles</h2>
+
+  <div class="inputs">
+    North: <input id="northInput" type="number" value="0"><br>
+    South: <input id="southInput" type="number" value="0"><br>
+    East:  <input id="eastInput" type="number" value="0"><br>
+    West:  <input id="westInput" type="number" value="0"><br>
+  </div>
+
+  <button onclick="startSimulation()">Start Simulation</button>
+</div>
+
+<!-- SIMULATION SCREEN -->
+<div id="simulation">
+
+  <div class="card">
+    <h2 id="status">Running...</h2>
+
+    <div class="main-display">
+
+      <!-- VIDEO -->
+      <div class="video-box">
+        <video id="trafficVideo" muted></video>
+        <h3 id="currentLane"></h3>
+      </div>
+
+      <!-- LIVE DATA -->
+      <div class="data-box">
+        <h3>Live Traffic</h3>
+        <p>North: <span id="northCount">0</span></p>
+        <p>South: <span id="southCount">0</span></p>
+        <p>East: <span id="eastCount">0</span></p>
+        <p>West: <span id="westCount">0</span></p>
+      </div>
+
+    </div>
+  </div>
+
+
+
+
+  <!-- CONTROLS -->
+  <div class="card">
+    <h3>Controls</h3>
+    <button onclick="pauseSimulation()">⏸ Pause</button>
+    <button onclick="resumeSimulation()">▶ Resume</button>
+    <div class="controls">
+      <div>North 
+        <button onclick="addVehicle('north')">+ 🚗</button>
+        <button onclick="triggerEmergency('north')">🚑</button>
+      </div>
+
+      <div>South 
+        <button onclick="addVehicle('south')">+ 🚗</button>
+        <button onclick="triggerEmergency('south')">🚑</button>
+      </div>
+
+      <div>East 
+        <button onclick="addVehicle('east')">+ 🚗</button>
+        <button onclick="triggerEmergency('east')">🚑</button>
+      </div>
+
+      <div>West 
+        <button onclick="addVehicle('west')">+ 🚗</button>
+        <button onclick="triggerEmergency('west')">🚑</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let lanes = { north:0, south:0, east:0, west:0 };
+let emergencyLane = null;
+let running = false;
+
+const video = document.getElementById("trafficVideo");
+
+function startSimulation() {
+  lanes.north = +northInput.value || 0;
+  lanes.south = +southInput.value || 0;
+  lanes.east  = +eastInput.value  || 0;
+  lanes.west  = +westInput.value  || 0;
+
+  document.getElementById("inputScreen").style.display = "none";
+  document.getElementById("simulation").style.display = "block";
+
+  updateUI();
+  running = true;
+  runSimulation();
+}
+function pauseSimulation(){
+  running = false;     // stop loop
+  video.pause();       // stop video
+  status.innerText = "⏸ Paused";
+}
+
+function resumeSimulation(){
+  if(!running){
+    running = true;
+    status.innerText = "▶ Resumed";
+    runSimulation();   // restart loop
+  }
+}
+
+function updateUI(){
+  northCount.innerText = lanes.north;
+  southCount.innerText = lanes.south;
+  eastCount.innerText  = lanes.east;
+  westCount.innerText  = lanes.west;
+}
+
+function addVehicle(lane){
+  lanes[lane]++;
+  updateUI();
+
+  // restart if stopped
+  if(!running){
+    running = true;
+    runSimulation();
+  }
+}
+
+function triggerEmergency(lane){
+  emergencyLane = lane;
+
+  if(!running){
+    running = true;
+    runSimulation();
+  }
+}
+
+function getMaxLane(){
+  let max="north";
+  for(let l in lanes){
+    if(lanes[l] > lanes[max]) max = l;
+  }
+  return max;
+}
+
+function allZero(){
+  return Object.values(lanes).every(v => v === 0);
+}
+
+function switchVideo(lane){
+  video.pause();
+
+  video.src = "/my_traffic/" + lane + ".mp4";
+  video.load();
+
+  // 🔥 force play properly
+  video.oncanplay = () => {
+    video.play().catch(err => console.log(err));
+  };
+
+  currentLane.innerText = "Current Lane: " + lane.toUpperCase();
+}
+
+function runSimulation(){
+  if(!running) return;
+
+  if(allZero()){
+    status.innerText = "No Traffic";
+    video.pause();
+    running = false;
+    return;
+  }
+
+  let selected;
+
+  if(emergencyLane){
+    selected = emergencyLane;
+    status.innerText = "🚑 Emergency → " + selected.toUpperCase();
+    emergencyLane = null;
+  } else {
+    selected = getMaxLane();
+    status.innerText = "Green Signal → " + selected.toUpperCase();
+  }
+
+  switchVideo(selected);
+
+  // ✅ FIXED: reduce only 1 vehicle
+  if(lanes[selected] > 0){
+    lanes[selected] -= 1;
+  }
+
+  updateUI();
+
+  setTimeout(runSimulation, 3000);
+}
+</script>
+
+</body>
+</html>
+

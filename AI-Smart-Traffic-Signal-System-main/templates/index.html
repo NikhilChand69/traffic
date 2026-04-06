@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Smart Traffic System</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            color: white;
+            text-align: center;
+        }
+
+        .header {
+            padding: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .card {
+            background: white;
+            color: black;
+            margin: 30px auto;
+            padding: 20px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 1000px;
+        }
+
+        .video-frame {
+            width: 100%;
+            border-radius: 10px;
+        }
+
+        .status {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+
+        .btn {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">🚦 AI Smart Traffic System</div>
+
+<div class="card">
+
+    <img src="/video" class="video-frame">
+
+    <div class="status">
+        <div>Lane1: <span id="lane1">0</span></div>
+        <div>Lane2: <span id="lane2">0</span></div>
+        <div>🚦 <span id="signal">Waiting...</span></div>
+    </div>
+
+    <a href="/simulation">
+        <button class="btn">Open Simulation 🚦</button>
+    </a>
+
+</div>
+
+<script>
+function updateData() {
+    fetch('/data')
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('lane1').innerText = data.lane1;
+        document.getElementById('lane2').innerText = data.lane2;
+        document.getElementById('signal').innerText = data.signal;
+    });
+}
+setInterval(updateData, 1000);
+</script>
+
+</body>
+</html>
